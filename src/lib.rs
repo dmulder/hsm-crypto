@@ -194,6 +194,7 @@ pub enum TpmError {
 
     Entropy,
     IncorrectKeyType,
+    AesKeyUnwrap,
 }
 
 #[derive(Debug, Clone)]
@@ -332,6 +333,12 @@ pub trait Tpm {
 
     fn identity_key_sign(&mut self, key: &IdentityKey, input: &[u8]) -> Result<Vec<u8>, TpmError>;
 
+    fn identity_key_unwrap(
+        &mut self,
+        key: &IdentityKey,
+        wrapped: &[u8],
+    ) -> Result<Zeroizing<Vec<u8>>, TpmError>;
+
     fn identity_key_verify(
         &mut self,
         key: &IdentityKey,
@@ -424,6 +431,14 @@ impl Tpm for BoxedDynTpm {
 
     fn identity_key_sign(&mut self, key: &IdentityKey, input: &[u8]) -> Result<Vec<u8>, TpmError> {
         self.0.identity_key_sign(key, input)
+    }
+
+    fn identity_key_unwrap(
+        &mut self,
+        key: &IdentityKey,
+        wrapped: &[u8],
+    ) -> Result<Zeroizing<Vec<u8>>, TpmError> {
+        self.0.identity_key_unwrap(key, wrapped)
     }
 
     fn identity_key_verify(

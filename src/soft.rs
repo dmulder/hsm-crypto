@@ -4,6 +4,8 @@ use crate::{
 };
 use zeroize::Zeroizing;
 
+use aes::cipher::generic_array::GenericArray;
+use aes_kw::Kek;
 use openssl::ec::{EcGroup, EcKey};
 use openssl::hash::{hash, MessageDigest};
 use openssl::nid::Nid;
@@ -13,6 +15,7 @@ use openssl::rsa::Rsa;
 use openssl::sign::{Signer, Verifier};
 use openssl::symm::{Cipher, Crypter, Mode};
 use openssl::x509::{X509NameBuilder, X509ReqBuilder, X509};
+use typenum::U32;
 
 use tracing::error;
 
@@ -391,6 +394,32 @@ impl Tpm for SoftTpm {
             error!(?ossl_err);
             TpmError::IdentityKeySignature
         })
+    }
+
+    fn identity_key_unwrap(
+        &mut self,
+        key: &IdentityKey,
+        wrapped: &[u8],
+    ) -> Result<Zeroizing<Vec<u8>>, TpmError> {
+        let kek = match key {
+            IdentityKey::SoftEcdsa256 { pkey, x509: _ }
+            | IdentityKey::SoftRsa2048 { pkey, x509: _ } => Kek::from(
+                GenericArray::<u8, U32>::clone_from_slice(&match pkey.private_key_to_der() {
+                    Ok(key) => key,
+                    Err(e) => {
+                        error!(?e);
+                        return Err(TpmError::RsaPrivateToDer);
+                    }
+                }),
+            ),
+        };
+        match kek.unwrap_with_padding_vec(wrapped) {
+            Ok(out) => Ok(out.into()),
+            Err(e) => {
+                error!(?e);
+                Err(TpmError::AesKeyUnwrap)
+            }
+        }
     }
 
     fn identity_key_verify(

@@ -20,6 +20,9 @@ serde = { version = "^1.0", features = ["derive"] }
 tracing = "^0.1.37"
 tss-esapi = { version = "^7.4.0", optional = true }
 zeroize = "1.6.0"
+aes-kw = { version = "0.2.1", features = ["alloc"] }
+aes = "^0.8.3"
+typenum = "^1.17.0"
 
 [dev-dependencies]
 tracing-subscriber = "^0.3.17"

@@ -456,6 +456,14 @@ impl Tpm for TpmTss {
         Err(TpmError::TpmOperationUnsupported)
     }
 
+    fn identity_key_unwrap(
+        &mut self,
+        key: &IdentityKey,
+        wrapped: &[u8],
+    ) -> Result<Zeroizing<Vec<u8>>, TpmError> {
+        Err(TpmError::TpmOperationUnsupported)
+    }
+
     fn identity_key_verify(
         &mut self,
         _key: &IdentityKey,
